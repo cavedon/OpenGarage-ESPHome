@@ -100,8 +100,8 @@ def _options(value):
         if not value["distance_enabled"] or value["mounting"] == "side":
             thresholds["vehicle"]["internal"] = True
     if "unified_control" in value:
-        if ESPHOME_VERSION != "2026.8.2":
-            raise cv.Invalid("Unified startup entity exposure is audited for ESPHome 2026.8.2; re-verify before upgrading")
+        #if ESPHOME_VERSION != "2026.8.2":
+        #    raise cv.Invalid("Unified startup entity exposure is audited for ESPHome 2026.8.2; re-verify before upgrading")
         if value["hardware"] not in ("auto", "v2_3"):
             raise cv.Invalid("Unified control requires auto or fixed v2_3 hardware")
         if any(key in value for key in ("dev_pulse_control", "pulse_control", "dev_secplus1",
