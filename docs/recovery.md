@@ -46,6 +46,10 @@ Factory reset does not replace firmware or perform an all-flash secure wipe. His
 
 New Security+ 2.0 client IDs follow Konnected's pattern: `((random & 0x7F7F) << 16) | 0x2908`. The fixed suffix is hexadecimal; the decimal ID displayed during setup will not necessarily end in 2908. Existing saved IDs, including older fully random IDs, are preserved on updates. Random generation does not guarantee a different ID after every factory reset.
 
+### Regenerate the Security+ 2.0 Client ID
+
+To replace only the client ID, open `http://DEVICE-IP/og/setup` and click **Regenerate client ID and restart**, or press the **Regenerate Security+ 2.0 Client ID** button in HA's **Configuration** section. OG saves a new, different ID using the same pattern and restarts; admin password, HA key, Wi-Fi, protocol and thresholds are kept. Update your saved private details afterwards. Regeneration is refused during firmware upload or a pending reset. If the save fails, controls stay inhibited until restart; check the client ID after restarting.
+
 ## Return to Stock Firmware
 
 Obtain stock firmware from the official [OpenGarage Firmware Downloads](https://opengarage.github.io/OpenGarage-Firmware/).

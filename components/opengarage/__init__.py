@@ -45,6 +45,7 @@ ThresholdNumber = ns.class_("ThresholdNumber", number.Number)
 OpenerProtocol = ns.enum("OpenerProtocol", is_class=True)
 PanelEmulation = ns.enum("PanelEmulation", is_class=True)
 UpdateModeButton = ns.class_("UpdateModeButton", button.Button)
+RegenerateClientIdButton = ns.class_("RegenerateClientIdButton", button.Button)
 StateSource = ns.enum("StateSource", is_class=True)
 Mounting = ns.enum("Mounting", is_class=True)
 ContactType = ns.enum("ContactType", is_class=True)
@@ -354,6 +355,8 @@ CONFIG_SCHEMA = cv.All(
             cv.Required("api_id"): cv.use_id(api.APIServer),
             cv.Required("ota_id"): cv.use_id(ESPHomeOTAComponent),
             cv.Required("status"): text_sensor.text_sensor_schema(entity_category="diagnostic"),
+            cv.Optional("regenerate_client_id"): button.button_schema(
+                RegenerateClientIdButton, entity_category="config", icon="mdi:identifier"),
         }),
         cv.Optional("state_source", default="distance"): cv.enum(SOURCES, lower=True),
         cv.Optional("mounting", default="ceiling"): cv.enum(MOUNTINGS, lower=True),
@@ -700,6 +703,8 @@ async def to_code(config):
                                 await cg.get_variable(conf["ota_id"]))
         await cg.register_component(setup, conf)
         cg.add(setup.set_status_sensor(await text_sensor.new_text_sensor(conf["status"])))
+        if "regenerate_client_id" in conf:
+            await button.new_button(conf["regenerate_client_id"], setup)
         # Keep the original mode and threshold records first. All later generic
         # versions must retain this allocation order and fixed record size.
         cg.add(setup.load_credentials())

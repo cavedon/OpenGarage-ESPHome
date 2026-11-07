@@ -17,7 +17,7 @@ progress{width:100%;height:1.2rem}
 <h1>OpenGarage Setup &amp; Update</h1>
 <p id="loading">Loading device setup…</p>
 <section id="paired" class="setup-section" hidden><h2>Home Assistant Pairing</h2><p>Paste this key when adding the discovered ESPHome device. Keep it private.</p>
-<label>HA encryption key<input id="key" readonly spellcheck="false"></label><p>Security+ 2.0 client ID: <code id="saved_id"></code>.</p><p id="dashboard_link" hidden><a href="/">Device controls and diagnostics</a></p>
+<label>HA encryption key<input id="key" readonly spellcheck="false"></label><p>Security+ 2.0 client ID: <code id="saved_id"></code>.</p><button id="regenerate_id" type="button" class="secondary">Regenerate client ID and restart</button><p id="dashboard_link" hidden><a href="/">Device controls and diagnostics</a></p>
 </section>
 <section id="firmware_settings" class="setup-section" hidden><h2>Firmware Update</h2><p>Update ESPHome or return to stock OpenGarage firmware. This disables opener controls until a restart. Use only an OpenGarage ESP8266 application .bin (4 MB hardware).</p><button id="update" type="button">Enter firmware update mode</button>
 <form id="upload" action="/update" method="post" enctype="multipart/form-data" hidden><label>ESP8266 firmware .bin<input id="firmware" type="file" name="update" accept=".bin" required></label><button>Upload firmware</button>
@@ -106,6 +106,13 @@ el('connect').addEventListener('click',async()=>{
 el('back').addEventListener('click',()=>{el('receipt').hidden=true;form.hidden=false;message.textContent='';});
 el('download').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([el('credentials').value+'\n'],{type:'text/plain'}));const a=document.createElement('a');a.href=url;const suffix=typeof info?.mac_suffix==='string'&&/^[a-f0-9]{4}$/i.test(info.mac_suffix)?'-'+info.mac_suffix.toLowerCase():'';a.download='opengarage-private-details'+suffix+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
 el('update').addEventListener('click',async()=>{if(uploadStarted||!info?.configured||!confirm('Disable opener controls until restart and enter firmware update mode?'))return;try{const r=await post('/og/update','');message.textContent=await r.text();updateReady=r.ok;el('upload').hidden=!r.ok;}catch(e){message.textContent=e.message;}});
+el('regenerate_id').addEventListener('click',async()=>{
+  if(uploadStarted||!info?.configured||!confirm('Generate a new Security+ 2.0 client ID and restart? Update your saved private details afterwards.'))return;
+  el('regenerate_id').disabled=true;
+  try{const r=await post('/og/client_id','');if(!r.ok){message.textContent=await r.text();el('regenerate_id').disabled=false;return;}
+    const result=await r.json();el('saved_id').textContent=result.client_id;message.textContent='New client ID saved; restarting. Update your saved private details.';}
+  catch(e){message.textContent='Connection lost. Reload after the device restarts and check the client ID.';}
+});
 window.addEventListener('beforeunload',e=>{if(uploadActive){e.preventDefault();e.returnValue='';}});
 el('upload').addEventListener('submit',e=>{
   e.preventDefault();if(uploadStarted||!updateReady)return;

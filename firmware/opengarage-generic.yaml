@@ -45,3 +45,5 @@ opengarage:
     ota_id: generic_ota
     status:
       name: Device Setup
+    regenerate_client_id:
+      name: Regenerate Security+ 2.0 Client ID

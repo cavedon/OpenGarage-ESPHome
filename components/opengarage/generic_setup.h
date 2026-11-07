@@ -26,6 +26,9 @@ class GenericSetup : public Component, public AsyncWebHandler, public ButtonReco
   void button_hold(bool factory) override;
   void button_report_ip() override;
   void button_release(bool factory) override;
+  // Replace only the saved Sec+2 client ID, then restart. On failure, sets
+  // *error (if non-null) and returns false; outputs may be inhibited.
+  bool regenerate_client_id(std::string *error);
  protected:
   static constexpr uint32_t WINDOW_MS = 600000;  // Initial open AP, ten minutes per power-up.
   bool trusted_host_(AsyncWebServerRequest *request) const;
@@ -54,6 +57,15 @@ class GenericSetup : public Component, public AsyncWebHandler, public ButtonReco
   uint32_t new_client_id_{0};
   uint32_t prepared_client_id_{0};
   bool recovery_inhibited_{false}, recovery_committed_{false}, wifi_recovery_{false};
+  bool client_id_committed_{false};
+};
+
+class RegenerateClientIdButton : public button::Button {
+ public:
+  explicit RegenerateClientIdButton(GenericSetup *setup) : setup_(setup) {}
+ protected:
+  void press_action() override { setup_->regenerate_client_id(nullptr); }  // Status sensor reports the result.
+  GenericSetup *setup_;
 };
 }  // namespace esphome::opengarage
 #endif
