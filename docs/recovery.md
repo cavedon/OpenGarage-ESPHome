@@ -48,7 +48,7 @@ New Security+ 2.0 client IDs follow Konnected's pattern: `((random & 0x7F7F) << 
 
 ### Regenerate the Security+ 2.0 Client ID
 
-To replace only the client ID, open `http://DEVICE-IP/og/setup` and click **Regenerate client ID and restart**, or press the **Regenerate Security+ 2.0 Client ID** button in HA's **Configuration** section. OG saves a new, different ID using the same pattern and restarts; admin password, HA key, Wi-Fi, protocol and thresholds are kept. Update your saved private details afterwards. Regeneration is refused during firmware upload or a pending reset. If the save fails, controls stay inhibited until restart; check the client ID after restarting.
+To replace only the client ID, press **Regenerate Security+ 2.0 Client ID** in **Sensor and Control** on the device homepage (after confirming), or in HA's **Configuration** section. OG saves a new, different ID using the same pattern and restarts; admin password, HA key, Wi-Fi, protocol and thresholds are kept. The new ID appears on `/og/setup` after the restart; update your saved private details. Regeneration is refused during firmware upload or a pending reset, and the **Device Setup** status reports why. If the save fails, controls stay inhibited until restart; check the client ID after restarting.
 
 ## Return to Stock Firmware
 

@@ -165,8 +165,8 @@ void GenericSetup::button_release(bool factory) {
   App.safe_reboot();
 }
 
-bool GenericSetup::regenerate_client_id(std::string *error) {
-  auto refuse = [&](const char *reason) { if (error) *error = reason; if (status_) status_->publish_state(reason); return false; };
+bool GenericSetup::regenerate_client_id() {
+  auto refuse = [&](const char *reason) { if (status_) status_->publish_state(reason); return false; };
   if (!configured_ || failed_) return refuse("Client ID regeneration requires completed setup");
   if (recovery_inhibited_ || recovery_committed_ || client_id_committed_) return refuse("Restart pending; client ID not changed");
   if (!parent_->button_recovery_allowed()) return refuse("Client ID not changed during firmware upload; wait for completion");
@@ -188,7 +188,7 @@ bool GenericSetup::regenerate_client_id(std::string *error) {
   client_id_committed_ = true;
   ESP_LOGI("og.setup", "New Security+ 2.0 client ID %lu saved; restarting", (unsigned long) client_id);
   if (status_) status_->publish_state("Client ID regenerated; restarting; update saved private details");
-  set_timeout("client-id-restart", 3000, []() { App.safe_reboot(); });
+  set_timeout("client-id-restart", 1000, []() { App.safe_reboot(); });
   return true;
 }
 
@@ -278,13 +278,6 @@ void GenericSetup::handleRequest(AsyncWebServerRequest *request) {
   if (url == "/og/update" && configured_) {
     parent_->enter_update_mode();
     send_(request, 200, "text/plain", "Firmware update mode entered. Upload a matching application .bin below, or restart the device to resume controls.");
-    return;
-  }
-  if (url == "/og/client_id" && configured_) {
-    std::string error;
-    if (!regenerate_client_id(&error)) { send_(request, 409, "text/plain", error); return; }
-    char id[11]; std::snprintf(id, sizeof(id), "%lu", (unsigned long) credentials_.client_id);
-    send_(request, 200, "application/json", std::string("{\"client_id\":\"") + id + "\"}");
     return;
   }
   const bool preview = url == "/og/prepare";

@@ -12,6 +12,8 @@
       return;
     }
     const views = new WeakMap();
+    // Keep this exact domain/name paired with firmware/opengarage-generic.yaml.
+    const regenerateId = entity => entity.domain === 'button' && entity.name === 'Regenerate Security+ 2.0 Client ID';
     // ESPHome's generic cover renderer always includes Stop, even though our
     // cover explicitly has supports_stop=false. Keep only supported commands.
     if (typeof table.control === 'function') {
@@ -32,7 +34,11 @@
               remoteLock ? (action === 'lock' ? 'Disable RF remotes' : 'Enable RF remotes') : 'Press ' + entity.name;
             button.setAttribute('aria-label', button.title);
             button.style.font = 'inherit'; button.style.minHeight = '44px'; button.style.padding = '.5rem .75rem';
-            button.addEventListener('click', () => { if (!button.disabled) this.restAction(entity, action); });
+            button.addEventListener('click', () => {
+              if (button.disabled) return;
+              if (regenerateId(entity) && !confirm('Generate a new Security+ 2.0 client ID and restart? Update your saved private details afterwards.')) return;
+              this.restAction(entity, action);
+            });
             row.append(button); buttons.push({button, state});
           }
           controls.set(entity, {row, buttons});
@@ -64,8 +70,17 @@
     const preferred = new Map(['Garage Door', 'Cancel Pending Action', 'Request Door Toggle', 'Door Open',
       'Door State', 'Distance', 'Vehicle Present', 'Vehicle State'].map((name, index) => [name, index]));
     table._groupEntities = function (entities) {
-      const groups = group.call(this, entities.filter(entity => belongs(this, entity)));
-      return new Map(Array.from(groups, ([name, rows]) => {
+      let groups = Array.from(group.call(this, entities.filter(entity => belongs(this, entity))));
+      // Presentation only: HA keeps this config-category button under Configuration.
+      const moved = groups.flatMap(([name, rows]) => name === 'Configuration' ? rows.filter(regenerateId) : []);
+      if (moved.length) {
+        groups = groups.map(([name, rows]) => [name, name === 'Configuration' ? rows.filter(e => !regenerateId(e)) : rows])
+          .filter(([, rows]) => rows.length);
+        const index = groups.findIndex(([name]) => name === 'Sensor and Control');
+        if (index >= 0) groups[index] = ['Sensor and Control', [...groups[index][1], ...moved]];
+        else groups.unshift(['Sensor and Control', moved]);
+      }
+      return new Map(groups.map(([name, rows]) => {
         const configuration = name === 'Configuration' && rows.every(entity => Number(entity.entity_category) === 1);
         // Sort a copy, retaining shared entity/history objects and stable order
         // for unlisted rows. Missing/late-discovered entities need no special case.
